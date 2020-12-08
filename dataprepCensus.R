@@ -17,7 +17,7 @@ library(gstat)
 library(sf)
 library(raster)
 library(rgdal)
-library(c)
+library(e1071)
 library(spdep)
 
 #Set working directory
@@ -36,6 +36,7 @@ income <- read.csv("./gsfile/Census/Income.csv")
 colnames(income) <- c("DAUID", "Income") 
 #Read in dissemination tract shapefile:
 census.tracts <- readOGR("./gsfile/Census/BC_DA.shp") 
+census.tracts <- spTransform(census.tracts, CRS("+init=epsg:26910"))
 #Merge income and dissemination data:
 income.tracts <- merge(census.tracts,income, by = "DAUID") 
 #Determine the number of columns in the dataframe:
@@ -45,8 +46,10 @@ income.tracts <- income.tracts[!is.na(income.tracts$Income),]
 #Reproject the data:
 income.tracts <- spTransform(income.tracts, CRS("+init=epsg:26910"))
 
+pm2.5.tracts <- merge(census.tracts,pm2.5, by = "DAUID")
+pm2.5.tracts <- pm2.5.tracts[!is.na(pm2.5.tracts$PM25),]
 
-tmaptools::palette_explorer()
+#tmaptools::palette_explorer()
 tmap_mode("view")
 
 #Create choropleth map of income:
@@ -59,15 +62,29 @@ map_Income <- tm_shape(income.tracts) +
 
 map_Income
 
+#map income tracts
+#tm_shape(income.tracts) + 
+# tm_polygons() +
+#  tm_shape(pm2.5) +
+#  tm_dots(col="PM25", palette = "Greens", n = 5,  
+#         title="Sampled Ozone \n(in ppm)", size=0.2) + 
+#  tm_legend(legend.outside=TRUE)
 
-#Create a grid called grd to use in your interpolation
-# Create an empty grid where n is the total number of cells
-grd <- as.data.frame(spsample(pm2.5, "regular", n=5000))
-names(grd)       <- c("X", "Y")
-coordinates(grd) <- c("X", "Y")
-# Create SpatialPixel object:
-gridded(grd)     <- TRUE  
-# Create SpatialGrid object:
-fullgrid(grd)    <- TRUE  
-#Reproject the grid:
-proj4string(grd) <- proj4string(income.tracts)
+#map pm2.5 tracts
+#map_pm2.5 <- tm_shape(pm2.5.tracts) +
+#  tm_polygons(col = "PM25",
+#             title = "PM2.5 in Vancouver",
+#              style = "fisher",
+#              palette = "Greens", n = 8) +
+#  tm_legend(legend.position = c("LEFT", "BOTTOM"))
+#map_pm2.5
+
+##Descriptive statistics
+##Neighbourhood 
+##Income Data
+##Objective 1: Spatial Segregation of Income (Global Moran's I) from lab3
+##Point pattern analysis for PM2.5 data from lab2
+##Spatial Interpolation from lab4
+##IDW?? justify the choice
+
+
